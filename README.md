@@ -4,3 +4,5 @@ List of functions
 -create s3 buckets
 -list s3 buckets
 -list bucket objects
+-Create s3 bucket
+-add webconfigurations and policies
