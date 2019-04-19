@@ -1,3 +1,13 @@
+#!/usr/bin/python
+# -*- coding: utf -*-
+
+"""configuring AWS S3 buckets
+   -Create buckets
+   -list list_buckets
+   -Sync Local directory to s3"""
+
+
+
 import boto3
 import click
 from botocore.exceptions import ClientError
@@ -19,12 +29,14 @@ def list_buckets():
    for bucket in s3.buckets.all():
     print(bucket)
 
+
 @cli.command('list-bucket-objects')
 @click.argument('bucket')
 def list_bucket_objects(bucket):
     "List bucket objects"
     for obj in s3.Bucket(bucket).objects.all():
         print(obj)
+
 
 @cli.command('setup-bucket')
 @click.argument('bucket')
@@ -34,11 +46,11 @@ def setup_bucket(bucket):
      try:
         s3bucket = s3.create_bucket(Bucket=bucket,
            CreateBucketConfiguration={ 'LocationConstraint': session.region_name})
-     except ClientError as e:
-        if e.response['Error']['Code'] == 'BucketAlreadyOwnedByYou':
+     except ClientError as error:
+        if error.response['Error']['Code'] == 'BucketAlreadyOwnedByYou':
             s3bucket = s3.Bucket(bucket)
         else:
-            raise e
+            raise error
 
 
      policy = """{"Version":"2012-10-17",
@@ -74,7 +86,7 @@ def upload_file(s3bucket, path, key):
     s3bucket.upload_file(
          path,
          key,
-         ExtraArgs={'ContentType': 'text/html'}
+         ExtraArgs={'ContentType': content_type}
     )
 @cli.command('sync')
 @click.argument('pathname', type=click.Path(exists=True))
@@ -87,8 +99,10 @@ def sync(pathname, bucket):
 
     def handle_directory(target):
         for p in target.iterdir():
-          if p.is_dir(): handle_directory(p)
-          if p.is_file(): upload_file(s3bucket, str(p), str(p.relative_to(root)))
+          if p.is_dir():
+              handle_directory(p)
+          if p.is_file():
+              upload_file(s3bucket, str(p), str(p.relative_to(root)))
 
     handle_directory(root)
 
