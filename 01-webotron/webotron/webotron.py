@@ -7,23 +7,27 @@
    -Sync Local directory to s3"""
 
 
-
-
-from bucket import BucketManager
 import boto3
 import click
+from bucket import BucketManager
 
-
-
-session = boto3.Session(profile_name = 'ec2automate')
-bucket_manager = BucketManager(session)               #s3 = session.resource('s3')
-
-
+session = None
+bucket_manager = None
 
 @click.group()
-def cli():
+@click.option('--profile', default=None,help="Use a given AWS profile.")
+def cli(profile):
     "webtron deploys website to AWS"
-    pass
+    global session, bucket_manager
+
+    session_cfg = {}
+    if profile:
+        session_cfg['profile_name'] = profile
+
+    session = boto3.Session(**session_cfg)
+    bucket_manager = BucketManager(session)                 #s3 = session.resource('s3') defined in bucket.py
+
+
 @cli.command('list-buckets')
 def list_buckets():
    "List all s3 buckets"
@@ -56,6 +60,7 @@ def sync(pathname, bucket):
     "sync contents of PATHNAME to Bucket"
 
     bucket_manager.sync(pathname, bucket)
+    print(bucket_manager.get_bucket_url(bucket_manager.s3.Bucket(bucket)))
 
 
 if __name__ == '__main__':
