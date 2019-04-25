@@ -7,7 +7,7 @@ import boto3
 from functools import reduce
 from botocore.exceptions import ClientError
 from hashlib import md5
-import utils
+from webotron import utils
 
 
 """Classes for S3 buckets"""
@@ -34,7 +34,9 @@ class BucketManager:
             for obj in page.get('Contents', []):
                 self.manifest[obj['Key']] = obj['ETag']                         #obje[key] are key names of s3 files and obj[Etag] is etag of that file
                                                                                 # so structure of manifest dictionary is ex: {index.html: "Etag"}
-
+    def get_bucket(self, bucket_name):
+        """Get a bucket object by name"""
+        return self.s3.Bucket(bucket_name)                          #return bucket object by taking domain name to create a bucket with domain name -  webotron.py/setup_domain()
 
     def get_region_name(self, bucket):
         """get the bucket region name"""
